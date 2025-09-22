@@ -1,2 +1,5 @@
 /.env.local
 /data
+
+*.py[cod]
+/src/extractors/__pycache__
