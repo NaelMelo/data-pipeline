@@ -3,3 +3,6 @@
 
 *.py[cod]
 /src/extractors/__pycache__
+**/_*
+
+
