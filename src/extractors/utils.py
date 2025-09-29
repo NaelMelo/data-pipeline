@@ -20,7 +20,7 @@ def medir_tempo(func):
         minutos = int(tempo_total // 60)
         segundos = int(tempo_total % 60)
 
-        log(f"Tempo de execucao de {func.__name__}: {minutos:02d}:{segundos:02d}", "\u23f1")
+        log(f"\nTempo de execucao de {func.__name__}: {minutos:02d}:{segundos:02d}\n", "🔚")
         return resultado
 
     return wrapper
