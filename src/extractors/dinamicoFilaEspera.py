@@ -15,7 +15,7 @@ load_dotenv(dotenv_path=".env.local")
 @medir_tempo
 def dinamicoFilaEspera():
 
-    print("🏁🏁\n🏁 Iniciando extração do relatorio: DinamicoFilaEspera\n")
+    print("🏁🏁🏁\n🏁 Iniciando extração do relatorio: DinamicoFilaEspera\n")
 
     payload = json.loads(os.getenv("DinamicoFilaEspera_payload"))
     # payload = json.loads(os.getenv("DinamicoAgendamento_payload_test"))# uso para testagem rapida

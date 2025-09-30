@@ -26,7 +26,7 @@ def download_csv(jsonCompleto, nomeRelatorio):
                 break
             else:
                 df = jsonCompleto
-                tqdm.write(f"🎯 DataFrame carregado em {(tentativa * intervalo_segundos)//60} minutos!")
+                tqdm.write(f"🎯 DataFrame carregados!")
                 break
         except HTTPError as e:
             if e.code in (404, 500):
