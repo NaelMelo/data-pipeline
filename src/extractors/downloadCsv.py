@@ -19,9 +19,15 @@ def download_csv(jsonCompleto, nomeRelatorio):
     df = None
     for tentativa in tqdm(range(max_tentativas), desc="⏳ Carregando JSON"):
         try:
-            df = pd.read_json(jsonCompleto)
-            tqdm.write(f"🎯 JSON carregado em {(tentativa * intervalo_segundos)//60} minutos!")
-            break
+            # df = pd.read_json(jsonCompleto)
+            if not isinstance(jsonCompleto, pd.DataFrame):
+                df = pd.read_json(jsonCompleto)
+                tqdm.write(f"🎯 JSON carregado em {(tentativa * intervalo_segundos)//60} minutos!")
+                break
+            else:
+                df = jsonCompleto
+                tqdm.write(f"🎯 DataFrame carregado em {(tentativa * intervalo_segundos)//60} minutos!")
+                break
         except HTTPError as e:
             if e.code in (404, 500):
                 time.sleep(intervalo_segundos)
@@ -34,7 +40,7 @@ def download_csv(jsonCompleto, nomeRelatorio):
             break
 
     if df is not None:
-        df = pd.read_json(jsonCompleto)
+        # df = pd.read_json(jsonCompleto)
 
         # Encontra as colunas com data e ajusta
         padrao_timestamp = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$")
