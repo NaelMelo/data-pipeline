@@ -2,8 +2,8 @@ from datetime import date
 import time
 from dateutil.relativedelta import relativedelta
 from datetime import date, timedelta
-from extractors.captureSession import capture_session
-from extractors.downloadCsv import download_csv
+from captureSession import capture_session
+from downloadCsv import download_csv
 from dotenv import load_dotenv
 import json
 import os
