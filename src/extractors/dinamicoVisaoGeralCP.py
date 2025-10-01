@@ -6,13 +6,12 @@ import json
 import os
 from utils import medir_tempo, gerar_periodos_formatados
 
-
 load_dotenv(dotenv_path=".env.local")
 
 
 @medir_tempo
-def dinamicoAgendamento():
-    print("🏁🏁🏁\n🏁 Iniciando extração do relatorio: DinamicoAgendamento")
+def dinamicoVisaoGeralCP():
+    print("🏁🏁🏁\n🏁 Iniciando extração do relatorio: Dinâmico Visão Geral CP - Visão Geral C.P.")
 
     lista_de_periodos = gerar_periodos_formatados()
 
@@ -20,14 +19,14 @@ def dinamicoAgendamento():
         inicio = time.time()
         print(f'\n📅 Extraindo: "{periodo["nome"]}" ({periodo["inicio"]} a {periodo["fim"]})')
 
-        payload_raw = os.getenv("DinamicoAgendamento_payload")
+        payload_raw = os.getenv("dinamicoVisaoGeralCP_payload")
         payload_str = payload_raw.replace("startDate", periodo["inicio"]).replace("endDate", periodo["fim"])
         payload = json.loads(payload_str)
         jsonCompleto = capture_session(payload)
         print("🔗 Link do JSON Completo:", jsonCompleto)
 
         nomeRelatorio = periodo["filename"]
-        download_csv(jsonCompleto, nomeRelatorio)
+        download_csv(jsonCompleto, "OG_" + nomeRelatorio)
 
         fim = time.time()
         tempo_total_minutos = (fim - inicio) / 60
@@ -35,4 +34,4 @@ def dinamicoAgendamento():
 
 
 if __name__ == "__main__":
-    dinamicoAgendamento()
+    dinamicoVisaoGeralCP()
