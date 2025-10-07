@@ -1,5 +1,4 @@
 import os
-from dotenv import load_dotenv
 import pandas as pd
 import requests
 import json
@@ -7,8 +6,6 @@ from downloadCsv import download_csv
 from zoneinfo import ZoneInfo
 from datetime import datetime
 from utils import medir_tempo
-
-load_dotenv(dotenv_path=".env.local")
 
 
 def captureSession_agendamentosIntegrado(payload):
@@ -40,23 +37,19 @@ def captureSession_agendamentosIntegrado(payload):
 
 
 @medir_tempo
-def agendamentosIntegrado():
-    # payload = json.loads(os.getenv("Agendamentos_Integrados_url_payload"))
-    # jsonCompleto = captureSession_agendamentosIntegrado(payload)
-    # df = pd.json_normalize(jsonCompleto["GridAgendamento"])
-    # print(df)
-    print("🏁🏁🏁\n🏁 Iniciando extração do relatorio: AgendamentosIntegrado\n")
+def agendamentos_integrado():
+    print("🏁🏁🏁\n🏁 Iniciando extração do relatorio: Relatório de Agendamentos Integrados\n◽")
     brasilia_tz = ZoneInfo("America/Sao_Paulo")
-    datetimeNow = datetime.now(brasilia_tz).strftime("%Y-%m-%d")
+    datetime_now = datetime.now(brasilia_tz).strftime("%Y-%m-%d")
     payload_raw = os.getenv("Agendamentos_Integrados_url_payload")
-    payload_str = payload_raw.replace("endDate", datetimeNow)
+    payload_str = payload_raw.replace("endDate", datetime_now)
     payload = json.loads(payload_str)
 
-    jsonRaw = captureSession_agendamentosIntegrado(payload)
-    jsonCompleto = pd.json_normalize(jsonRaw["GridAgendamento"])
+    json_raw = captureSession_agendamentosIntegrado(payload)
+    json_completo = pd.json_normalize(json_raw["GridAgendamento"])
 
-    download_csv(jsonCompleto, "Relatório de Agendamentos Integrados")
+    download_csv(json_completo, "dinamicoAgendamentosIntegrado_")
 
 
 if __name__ == "__main__":
-    agendamentosIntegrado()
+    agendamentos_integrado()

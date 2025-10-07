@@ -1,12 +1,9 @@
 import time
 from captureSession import capture_session
 from downloadCsv import download_csv
-from dotenv import load_dotenv
 import json
 import os
 from utils import medir_tempo, gerar_periodos_formatados
-
-load_dotenv(dotenv_path=".env.local")
 
 
 @medir_tempo
@@ -17,7 +14,7 @@ def dinamicoVisaoGeralCP():
 
     for periodo in lista_de_periodos:
         inicio = time.time()
-        print(f'\n📅 Extraindo: "{periodo["nome"]}" ({periodo["inicio"]} a {periodo["fim"]})')
+        print(f'◽\n📅 Extraindo: "{periodo["nome"]}" ({periodo["inicio"]} a {periodo["fim"]})')
 
         payload_raw = os.getenv("dinamicoVisaoGeralCP_payload")
         payload_str = payload_raw.replace("startDate", periodo["inicio"]).replace("endDate", periodo["fim"])
@@ -26,7 +23,7 @@ def dinamicoVisaoGeralCP():
         print("🔗 Link do JSON Completo:", jsonCompleto)
 
         nomeRelatorio = periodo["filename"]
-        download_csv(jsonCompleto, "OG_" + nomeRelatorio)
+        download_csv(jsonCompleto, "DinamicoVisaoGeralCP_" + nomeRelatorio)
 
         fim = time.time()
         tempo_total_minutos = (fim - inicio) / 60

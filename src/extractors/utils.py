@@ -3,7 +3,9 @@ from functools import wraps
 from zoneinfo import ZoneInfo
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta, datetime
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def log(msg: str, emoji: str = "\u2139") -> None:
     """Imprime uma mensagem padronizada com emoji no inicio."""
@@ -21,7 +23,7 @@ def medir_tempo(func):
         minutos = int(tempo_total // 60)
         segundos = int(tempo_total % 60)
 
-        print(f"\n🔚 Tempo de execucao de {func.__name__}: {minutos:02d}:{segundos:02d}\n🔚🔚🔚\n\n")
+        print(f"◽\n🔚 Tempo de execucao de {func.__name__}: {minutos:02d}:{segundos:02d}\n🔚🔚🔚\n\n")
         return resultado
 
     return wrapper

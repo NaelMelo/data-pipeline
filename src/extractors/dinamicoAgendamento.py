@@ -1,18 +1,14 @@
 import time
 from captureSession import capture_session
 from downloadCsv import download_csv
-from dotenv import load_dotenv
 import json
 import os
 from utils import medir_tempo, gerar_periodos_formatados
 
 
-load_dotenv(dotenv_path=".env.local")
-
-
 @medir_tempo
 def dinamicoAgendamento():
-    print("🏁🏁🏁\n🏁 Iniciando extração do relatorio: DinamicoAgendamento")
+    print("🏁🏁🏁\n🏁 Iniciando extração do relatorio: Dinâmico Agendamentos - Regulação")
 
     lista_de_periodos = gerar_periodos_formatados()
 
@@ -27,7 +23,7 @@ def dinamicoAgendamento():
         print("🔗 Link do JSON Completo:", jsonCompleto)
 
         nomeRelatorio = periodo["filename"]
-        download_csv(jsonCompleto, nomeRelatorio)
+        download_csv(jsonCompleto, "DinamicoAgendamento_" + nomeRelatorio)
 
         fim = time.time()
         tempo_total_minutos = (fim - inicio) / 60

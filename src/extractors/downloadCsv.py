@@ -9,8 +9,6 @@ import time
 from urllib.error import HTTPError
 from tqdm import tqdm
 
-load_dotenv(dotenv_path=".env.local")
-
 
 def download_csv(jsonCompleto, nomeRelatorio):
     maximo_minutos = 10
@@ -40,8 +38,6 @@ def download_csv(jsonCompleto, nomeRelatorio):
             break
 
     if df is not None:
-        # df = pd.read_json(jsonCompleto)
-
         # Encontra as colunas com data e ajusta
         padrao_timestamp = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$")
         colunas_transformadas = []

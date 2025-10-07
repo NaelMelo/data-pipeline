@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import requests
 import json
 
-load_dotenv(dotenv_path=".env.local")
+load_dotenv()
 
 
 def capture_session(payload):

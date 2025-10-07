@@ -1,21 +1,13 @@
-from datetime import date
-import time
-from dateutil.relativedelta import relativedelta
-from datetime import date, timedelta
 from captureSession import capture_session
 from downloadCsv import download_csv
-from dotenv import load_dotenv
 import json
 import os
 from utils import medir_tempo
 
-load_dotenv(dotenv_path=".env.local")
-
 
 @medir_tempo
 def dinamicoFilaEspera():
-
-    print("🏁🏁🏁\n🏁 Iniciando extração do relatorio: DinamicoFilaEspera\n")
+    print(f"🏁🏁🏁\n🏁 Iniciando extração do relatorio: Dinâmico Fila Espera\n")
 
     payload = json.loads(os.getenv("DinamicoFilaEspera_payload"))
     # payload = json.loads(os.getenv("DinamicoAgendamento_payload_test"))# uso para testagem rapida
@@ -23,7 +15,7 @@ def dinamicoFilaEspera():
     print("🔗 Link do JSON Completo:", jsonCompleto)
 
     nomeRelatorio = "Fila Ambulatorial"
-    download_csv(jsonCompleto, nomeRelatorio)
+    download_csv(jsonCompleto, "DinamicoFilaEspera_" + nomeRelatorio)
 
 
 if __name__ == "__main__":
