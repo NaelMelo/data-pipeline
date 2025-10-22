@@ -2,13 +2,14 @@ import os
 import pandas as pd
 import requests
 import json
-from downloadCsv import download_csv
 from zoneinfo import ZoneInfo
 from datetime import datetime
 from pipeline_bigquery import carregar_dados_bigquery
 from utils import medir_tempo
-from extractors._df_to_bigquery import SendBigQuery
 import config_loader
+
+# from downloadCsv import download_csv
+# from extractors._df_to_bigquery import SendBigQuery
 
 config_loader.setup_environment()
 
