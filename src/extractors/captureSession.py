@@ -3,7 +3,7 @@ import os
 # from dotenv import load_dotenv
 import requests
 import json
-import config_loader
+from . import config_loader
 
 config_loader.setup_environment()
 

@@ -4,9 +4,9 @@ import requests
 import json
 from zoneinfo import ZoneInfo
 from datetime import datetime
-from pipeline_bigquery import carregar_dados_bigquery
-from utils import medir_tempo
-import config_loader
+from .pipeline_bigquery import carregar_dados_bigquery
+from .utils import medir_tempo
+from . import config_loader
 
 # from downloadCsv import download_csv
 # from extractors._df_to_bigquery import SendBigQuery
