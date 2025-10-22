@@ -19,7 +19,3 @@ def dinamicoFilaEspera():
     # download_csv(jsonCompleto, "DinamicoFilaEspera_" + nomeRelatorio)
 
     SendBigQuery(jsonCompleto, os.getenv("DinamicoFilaEspera_table"))
-
-
-if __name__ == "__main__":
-    dinamicoFilaEspera()
