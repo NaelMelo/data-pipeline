@@ -1,9 +1,11 @@
 import os
-from dotenv import load_dotenv
+
+# from dotenv import load_dotenv
 import requests
 import json
+import config_loader
 
-load_dotenv()
+config_loader.setup_environment()
 
 
 def capture_session(payload):

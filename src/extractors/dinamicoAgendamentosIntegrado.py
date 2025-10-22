@@ -5,7 +5,12 @@ import json
 from downloadCsv import download_csv
 from zoneinfo import ZoneInfo
 from datetime import datetime
+from pipeline_bigquery import carregar_dados_bigquery
 from utils import medir_tempo
+from extractors._df_to_bigquery import SendBigQuery
+import config_loader
+
+config_loader.setup_environment()
 
 
 def captureSession_agendamentosIntegrado(payload):
@@ -47,9 +52,10 @@ def agendamentos_integrado():
 
     json_raw = captureSession_agendamentosIntegrado(payload)
     json_completo = pd.json_normalize(json_raw["GridAgendamento"])
+    Agendamentos_Integrados_table = os.getenv("Agendamentos_Integrados_table")
+    # SendBigQuery(json_completo, Agendamentos_Integrados_table)
 
-    download_csv(json_completo, "dinamicoAgendamentosIntegrado_")
+    mapping_str = os.getenv("Agendamentos_Integrados_mapamento_bq")
+    Agendamentos_Integrados_mapamento_bq = json.loads(mapping_str)
 
-
-if __name__ == "__main__":
-    agendamentos_integrado()
+    carregar_dados_bigquery(json_completo, Agendamentos_Integrados_table, Agendamentos_Integrados_mapamento_bq)

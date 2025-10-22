@@ -3,9 +3,13 @@ from functools import wraps
 from zoneinfo import ZoneInfo
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta, datetime
-from dotenv import load_dotenv
+import pandas as pd
+import re
+from unidecode import unidecode
 
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
+
 
 def log(msg: str, emoji: str = "\u2139") -> None:
     """Imprime uma mensagem padronizada com emoji no inicio."""
@@ -50,14 +54,3 @@ def gerar_periodos_formatados():
             }
         )
     return periodos
-
-
-def download_action(page, element, name):
-    with page.expect_download(timeout=1000 * 1800) as download_info:
-        page.locator(element).click()
-    download = download_info.value
-    brasilia_tz = ZoneInfo("America/Sao_Paulo")
-    timestamp = datetime.now(brasilia_tz).strftime("%Y%m%d-%H%M%S")
-    save_path = f"data/raw/{name}__{timestamp}.csv"
-    download.save_as(save_path)
-    log(f"Salvo em: {save_path}", "\U0001f4e5")
