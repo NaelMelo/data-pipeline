@@ -1,4 +1,5 @@
 import os
+from pdb import run
 import pandas as pd
 import requests
 import json
@@ -60,3 +61,7 @@ def agendamentos_integrado():
     Agendamentos_Integrados_mapamento_bq = json.loads(mapping_str)
 
     carregar_dados_bigquery(json_completo, Agendamentos_Integrados_table, Agendamentos_Integrados_mapamento_bq)
+
+
+if __name__ == "__main__":
+    agendamentos_integrado()
