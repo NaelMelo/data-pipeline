@@ -38,7 +38,7 @@ def setup_environment():
         setup_text.append("☁️  ", style="dark_green")
         setup_text.append("Ambiente Google Cloud detectado.\n", style="dark_green")
         setup_text.append("🔑  ", style="dark_green")
-        setup_text.append(f"Carregando secrets de [bold]{SECRET_NAME}[/bold]...", style="dark_green")
+        setup_text.append(f"Carregando secrets de [bold green]{SECRET_NAME}[/bold green]...", style="dark_green")
 
         try:
             client = secretmanager.SecretManagerServiceClient()
