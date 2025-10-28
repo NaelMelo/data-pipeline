@@ -86,7 +86,11 @@ def converter_tipos_bigquery(df: pd.DataFrame, mapeamento_bq: dict) -> pd.DataFr
                 df_copy[coluna] = pd.to_numeric(df_copy[coluna], errors="coerce").astype("Float64")
             else:
                 df_copy[coluna] = (
-                    df_copy[coluna].astype(str).replace("<NA>", np.nan).replace("nan", np.nan).astype("string")
+                    df_copy[coluna]
+                    .astype(str)
+                    .replace({"<NA>": np.nan, "nan": np.nan})
+                    .infer_objects(copy=False)
+                    .astype("string")
                 )
 
         except Exception as e:
