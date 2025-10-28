@@ -7,13 +7,20 @@ import pandas as pd
 import re
 from unidecode import unidecode
 
-# from dotenv import load_dotenv
-# load_dotenv()
 
+def now_fortaleza(format_string: str | None = None) -> str | datetime:
+    try:
+        now_utc = datetime.now(ZoneInfo("UTC"))
+        dt_fortaleza_aware = now_utc.astimezone(ZoneInfo("America/Fortaleza"))
 
-def log(msg: str, emoji: str = "\u2139") -> None:
-    """Imprime uma mensagem padronizada com emoji no inicio."""
-    print(f"{emoji} {msg}")
+        if format_string is None:
+            return dt_fortaleza_aware.replace(tzinfo=None)
+
+        return dt_fortaleza_aware.strftime(format_string)
+
+    except ValueError as e:
+        print(f"Erro: String de formatação inválida: '{format_string}'. Detalhe: {e}")
+        return ""
 
 
 def medir_tempo(func):
@@ -34,9 +41,7 @@ def medir_tempo(func):
 
 
 def gerar_periodos_formatados():
-    brasilia_tz = ZoneInfo("America/Sao_Paulo")
-    agora = datetime.now(brasilia_tz)
-    hoje = agora.date()
+    hoje = now_fortaleza().date()
     periodos = []
     nomes = {-1: "Mês Passado", 0: "Mês Atual", 1: "Próximo Mês"}
 
@@ -54,3 +59,9 @@ def gerar_periodos_formatados():
             }
         )
     return periodos
+
+
+if __name__ == "__main__":
+    print(now_fortaleza())
+
+    print(datetime.now())

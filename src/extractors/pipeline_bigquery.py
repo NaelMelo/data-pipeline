@@ -4,10 +4,13 @@ import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from tqdm import tqdm
-
+from urllib.error import HTTPError
+import re
 from google.cloud import bigquery
-from google.api_core.exceptions import NotFound
+from google.api_core.exceptions import NotFound, BadRequest
 from unidecode import unidecode
+
+from .utils import now_fortaleza
 
 # =========================================================================
 # FUNÇÕES DE LIMPEZA E PREPARAÇÃO (Do seu script original, com melhorias)
@@ -125,86 +128,112 @@ def carregar_dados_bigquery(json_ou_df, table_id, mapeamento_bq, valor_periodo=N
         delimitador_csv (str, optional): Delimitador para arquivos CSV. Padrão é ','.
     """
     print(f"🚀 Iniciando pipeline para a tabela: {table_id}")
-
-    try:
-        if isinstance(json_ou_df, pd.DataFrame):
-            df = json_ou_df
-            print("✔️ DataFrame recebido diretamente.")
-        elif isinstance(json_ou_df, str) and json_ou_df.lower().endswith(".csv"):
-            print(f"⏳ Carregando dados de CSV: {json_ou_df}...")
-            # Lê todas as colunas como string para evitar inferência automática de tipo
-            df = pd.read_csv(json_ou_df, sep=delimitador_csv, dtype=str)
-            print("✔️ Dados de CSV carregados com sucesso.")
-        elif isinstance(json_ou_df, str):
-            print(f"⏳ Carregando dados de JSON: {json_ou_df}...")
-            df = pd.read_json(json_ou_df, dtype=str)
-            print("✔️ Dados de JSON carregados com sucesso.")
-        else:
-            raise ValueError("Entrada 'json_ou_df' deve ser um DataFrame ou um caminho de arquivo (str).")
-
-    except Exception as e:
-        print(f"❌ Falha crítica ao carregar os dados: {e}")
-        return
-
-    # --- ETAPA 1: Limpeza dos Cabeçalhos ---
-    print("✨ Iniciando limpeza dos cabeçalhos...")
-    df_limpo = clean_headers_custom_rules(df)
-    print("✅ Cabeçalhos limpos e padronizados.")
-
-    # --- ETAPA 2: Ajuste do Mapeamento ---
-    mapeamento_bq_limpo = {
-        clean_headers_custom_rules(pd.DataFrame(columns=[k])).columns[0]: v for k, v in mapeamento_bq.items()
-    }
-
-    # --- ETAPA 3: Conversão de Tipos ---
-    df_convertido = converter_tipos_bigquery(df_limpo, mapeamento_bq_limpo)
-
-    # --- ETAPA 4: Geração do Schema ---
-    schema_bq = gerar_schema_bigquery(df_convertido, mapeamento_bq_limpo)
-
-    # --- ETAPA 5: Adicionar Colunas de Metadados ---
-    brasilia_tz = ZoneInfo("America/Sao_Paulo")
-    hora_local_sem_fuso = datetime.now(brasilia_tz).replace(tzinfo=None)
-    df_convertido["extracao_timestamp"] = hora_local_sem_fuso
-    if "extracao_timestamp" not in mapeamento_bq_limpo:
-        schema_bq.append(bigquery.SchemaField("extracao_timestamp", "DATETIME"))
-    print("⏲️ Adicionada coluna de 'extracao_timestamp'")
-
-    # --- ETAPA 6: Lógica de Envio para o BigQuery ---
-    client = bigquery.Client()
-
-    if valor_periodo:
-        df_convertido["periodo"] = valor_periodo
-        if "periodo" not in mapeamento_bq_limpo:
-            schema_bq.append(bigquery.SchemaField("periodo", "STRING"))
-        print(f"   - Coluna 'periodo' adicionada com valor '{valor_periodo}'.")
-
-        print(f"🔄 Modo de atualização: Deletando registros para o período '{valor_periodo}'...")
-        query = f"DELETE FROM `{table_id}` WHERE periodo = '{valor_periodo}'"
+    maximo_minutos = 10
+    intervalo_segundos = 10
+    max_tentativas = (maximo_minutos * 60) // intervalo_segundos
+    df = None
+    for tentativa in tqdm(range(max_tentativas), desc="⏳ Carregando JSON"):
         try:
-            query_job = client.query(query)
-            query_job.result()
-            print(f"   - Registros antigos removidos com sucesso.")
-        except NotFound:
-            print(f"   - ⚠️ A tabela '{table_id}' não existe ainda. A etapa DELETE foi ignorada.")
+            if not isinstance(json_ou_df, pd.DataFrame):
+                df = pd.read_json(json_ou_df)
+                tqdm.write(f"🎯 JSON carregado em {(tentativa * intervalo_segundos)//60} minutos!")
+                break
+            else:
+                df = json_ou_df
+                tqdm.write(f"🎯 DataFrame carregados!")
+                break
+        except HTTPError as e:
+            if e.code in (404, 500):
+                time.sleep(intervalo_segundos)
+            else:
+                tqdm.write(f"Erro HTTP inesperado: {e}")
+                break
+        except Exception as e:
+            tqdm.write(f"Ocorreu um erro inesperado: {e}")
+            tqdm.write("Interrompendo as tentativas.")
+            break
 
-        job_config = bigquery.LoadJobConfig(
-            schema=schema_bq,
-            write_disposition="WRITE_APPEND",
-            create_disposition="CREATE_IF_NEEDED",
-        )
+    if df is not None:
+        # Encontra as colunas com data e ajusta
+        padrao_timestamp = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$")
+        colunas_transformadas = []
+        for coluna in df.columns:
+            if df[coluna].dtype == "object":
+                primeiro_valor_valido = df[coluna].dropna().iloc[0] if not df[coluna].dropna().empty else None
+                if (
+                    primeiro_valor_valido
+                    and isinstance(primeiro_valor_valido, str)
+                    and padrao_timestamp.match(primeiro_valor_valido)
+                ):
+                    df[coluna] = df[coluna].str[:10]
+                    colunas_transformadas.append(coluna)
+
+        # --- ETAPA 1: Limpeza dos Cabeçalhos ---
+        print("✨ Iniciando limpeza dos cabeçalhos...")
+        df_limpo = clean_headers_custom_rules(df)
+        print("✅ Cabeçalhos limpos e padronizados.")
+
+        # --- ETAPA 2: Ajuste do Mapeamento ---
+        mapeamento_bq_limpo = {
+            clean_headers_custom_rules(pd.DataFrame(columns=[k])).columns[0]: v for k, v in mapeamento_bq.items()
+        }
+
+        # --- ETAPA 3: Conversão de Tipos ---
+        df_convertido = converter_tipos_bigquery(df_limpo, mapeamento_bq_limpo)
+
+        # --- ETAPA 4: Geração do Schema ---
+        schema_bq = gerar_schema_bigquery(df_convertido, mapeamento_bq_limpo)
+
+        # --- ETAPA 5: Adicionar Colunas de Metadados ---
+        df_convertido["extracao_timestamp"] = now_fortaleza()
+        if "extracao_timestamp" not in mapeamento_bq_limpo:
+            schema_bq.append(bigquery.SchemaField("extracao_timestamp", "DATETIME"))
+        print("⏲️ Adicionada coluna de 'extracao_timestamp'")
+
+        # --- ETAPA 6: Lógica de Envio para o BigQuery ---
+        client = bigquery.Client()
+
+        if valor_periodo:
+            df_convertido["periodo"] = valor_periodo
+            if "periodo" not in mapeamento_bq_limpo:
+                schema_bq.append(bigquery.SchemaField("periodo", "STRING"))
+            print(f"⚠️ Coluna 'periodo' adicionada com valor '{valor_periodo}'.")
+
+            print(f"🔄 Modo de atualização: Deletando registros para o período '{valor_periodo}'...")
+            query = f"DELETE FROM `{table_id}` WHERE periodo = '{valor_periodo}'"
+            try:
+                query_job = client.query(query)
+                query_job.result()
+                print(f"⚠️ Registros antigos removidos com sucesso.")
+            except NotFound:
+                print(f"⚠️ A tabela '{table_id}' não existe ainda. A etapa DELETE foi ignorada.")
+            except BadRequest as e:
+                if "Unrecognized name: periodo" in str(e):
+                    print(
+                        f"⚠️ A coluna 'periodo' não existe na tabela. A etapa DELETE foi ignorada (provavelmente é a primeira carga)."
+                    )
+                else:
+                    raise e
+
+            job_config = bigquery.LoadJobConfig(
+                schema=schema_bq,
+                write_disposition="WRITE_APPEND",
+                create_disposition="CREATE_IF_NEEDED",
+            )
+        else:
+            print("🔄 Modo de atualização: Substituindo a tabela inteira (WRITE_TRUNCATE)...")
+            job_config = bigquery.LoadJobConfig(
+                schema=schema_bq,
+                write_disposition="WRITE_TRUNCATE",
+                create_disposition="CREATE_IF_NEEDED",
+            )
+
+        print(f"📤 Enviando {len(df_convertido)} linhas para o BigQuery...")
+        try:
+            job = client.load_table_from_dataframe(df_convertido, table_id, job_config=job_config)
+            job.result()
+            print(f"✅ Sucesso! Tabela '{table_id}' foi atualizada.")
+        except Exception as e:
+            print(f"❌ Falha ao enviar dados para o BigQuery: {e}")
     else:
-        print("🔄 Modo de atualização: Substituindo a tabela inteira (WRITE_TRUNCATE)...")
-        job_config = bigquery.LoadJobConfig(
-            schema=schema_bq,
-            write_disposition="WRITE_TRUNCATE",
-            create_disposition="CREATE_IF_NEEDED",
-        )
-
-    print(f"📤 Enviando {len(df_convertido)} linhas para o BigQuery...")
-    try:
-        job = client.load_table_from_dataframe(df_convertido, table_id, job_config=job_config)
-        job.result()
-        print(f"✅ Sucesso! Tabela '{table_id}' foi atualizada.")
-    except Exception as e:
-        print(f"❌ Falha ao enviar dados para o BigQuery: {e}")
+        print(f"Falha ao carregar o JSON/DF após {maximo_minutos} minutos tentando.")

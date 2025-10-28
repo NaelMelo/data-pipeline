@@ -2,27 +2,30 @@ import os
 import io
 from dotenv import load_dotenv, dotenv_values
 from google.cloud import secretmanager
-
-# --- Rich Imports ---
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 from rich.rule import Rule
 
-# --- Instantiate Console ---
-# Instanciamos o console globalmente para usá-lo em todo o script
 console = Console()
 
 SECRET_NAME = "Fast_Medic"
+
+stamp_load_loader = 1
 
 
 def setup_environment():
     """
     Carrega as variáveis de ambiente com formatação Rich.
-
     - Se rodando no Google Cloud (ex: Colab Enterprise), busca do Secret Manager.
     - Se rodando localmente, busca de um arquivo .env.
     """
+
+    # Evita rodar múltiplas vezes
+    global stamp_load_loader
+    if stamp_load_loader > 1:
+        return
+    stamp_load_loader += 1
 
     # Objeto de Texto para construir o conteúdo do painel
     setup_text = Text()

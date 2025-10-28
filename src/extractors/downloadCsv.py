@@ -9,6 +9,8 @@ import time
 from urllib.error import HTTPError
 from tqdm import tqdm
 
+from .utils import now_fortaleza
+
 
 def download_csv(jsonCompleto, nomeRelatorio):
     maximo_minutos = 10
@@ -53,8 +55,7 @@ def download_csv(jsonCompleto, nomeRelatorio):
                     colunas_transformadas.append(coluna)
 
         # Salva o .CSV
-        brasilia_tz = ZoneInfo("America/Sao_Paulo")
-        timestamp = datetime.now(brasilia_tz).strftime("%Y%m%d-%H%M%S")
+        timestamp = now_fortaleza()
         if "google.colab" in sys.modules or "COLAB_RELEASE_TAG" in os.environ:
             save_path = os.getenv("save_path_google")
         else:

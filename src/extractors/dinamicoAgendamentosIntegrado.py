@@ -1,18 +1,15 @@
 import os
-from pdb import run
 import pandas as pd
 import requests
 import json
-from zoneinfo import ZoneInfo
-from datetime import datetime
-from .pipeline_bigquery import carregar_dados_bigquery
-from .utils import medir_tempo
 from . import config_loader
+from .utils import medir_tempo, now_fortaleza
+from .pipeline_bigquery import carregar_dados_bigquery
 
-# from downloadCsv import download_csv
-# from extractors._df_to_bigquery import SendBigQuery
 
 config_loader.setup_environment()
+# from downloadCsv import download_csv
+# from extractors._df_to_bigquery import SendBigQuery
 
 
 def captureSession_agendamentosIntegrado(payload):
@@ -46,21 +43,17 @@ def captureSession_agendamentosIntegrado(payload):
 @medir_tempo
 def agendamentos_integrado():
     print("🏁🏁🏁\n🏁 Iniciando extração do relatorio: Relatório de Agendamentos Integrados\n◽")
-    brasilia_tz = ZoneInfo("America/Sao_Paulo")
-    datetime_now = datetime.now(brasilia_tz).strftime("%Y-%m-%d")
     payload_raw = os.getenv("Agendamentos_Integrados_url_payload")
-    payload_str = payload_raw.replace("endDate", datetime_now)
+    payload_str = payload_raw.replace("endDate", now_fortaleza("%Y-%m-%d"))
     payload = json.loads(payload_str)
 
     json_raw = captureSession_agendamentosIntegrado(payload)
     json_completo = pd.json_normalize(json_raw["GridAgendamento"])
-    Agendamentos_Integrados_table = os.getenv("Agendamentos_Integrados_table")
-    # SendBigQuery(json_completo, Agendamentos_Integrados_table)
-
+    tabela_bq = os.getenv("Agendamentos_Integrados_table")
     mapping_str = os.getenv("Agendamentos_Integrados_mapamento_bq")
-    Agendamentos_Integrados_mapamento_bq = json.loads(mapping_str)
+    mapeamento_bq = json.loads(mapping_str)
 
-    carregar_dados_bigquery(json_completo, Agendamentos_Integrados_table, Agendamentos_Integrados_mapamento_bq)
+    carregar_dados_bigquery(json_completo, tabela_bq, mapeamento_bq)
 
 
 if __name__ == "__main__":

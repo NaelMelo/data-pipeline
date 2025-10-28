@@ -1,11 +1,14 @@
 import time
-from pipeline_bigquery import carregar_dados_bigquery
-from captureSession import capture_session
-from downloadCsv import download_csv
 import json
 import os
-from extractors._df_to_bigquery import SendBigQuery
-from utils import medir_tempo, gerar_periodos_formatados
+from .captureSession import capture_session
+from .utils import medir_tempo, gerar_periodos_formatados
+from .pipeline_bigquery import carregar_dados_bigquery
+
+# from downloadCsv import download_csv
+# from extractors._df_to_bigquery import SendBigQuery
+# from . import config_loader
+# config_loader.setup_environment()
 
 
 @medir_tempo
@@ -21,12 +24,17 @@ def dinamicoAgendamento():
         payload_raw = os.getenv("DinamicoAgendamento_payload")
         payload_str = payload_raw.replace("startDate", periodo["inicio"]).replace("endDate", periodo["fim"])
         payload = json.loads(payload_str)
-        jsonCompleto = capture_session(payload)
-        print("🔗 Link do JSON Completo:", jsonCompleto)
+        json_completo = capture_session(payload)
+        print("🔗 Link do JSON Completo:", json_completo)
 
         # nomeRelatorio = periodo["filename"]
         # download_csv(jsonCompleto, "DinamicoAgendamento_" + nomeRelatorio)
-        SendBigQuery(jsonCompleto, os.getenv("DinamicoAgendamento_table"), periodo["filename"])
+
+        tabela_bq = os.getenv("DinamicoAgendamento_table")
+        mapping_str = os.getenv("DinamicoAgendamento_mapamento_bq")
+        mapeamento_bq = json.loads(mapping_str)
+
+        carregar_dados_bigquery(json_completo, tabela_bq, mapeamento_bq, periodo["filename"])
 
         fim = time.time()
         tempo_total_minutos = (fim - inicio) / 60
