@@ -136,6 +136,11 @@ def carregar_dados_bigquery(json_ou_df, table_id, mapeamento_bq, valor_periodo=N
     intervalo_segundos = 10
     max_tentativas = (maximo_minutos * 60) // intervalo_segundos
     df = None
+
+    if isinstance(json_ou_df, list) and len(json_ou_df) == 0:
+        print(f"⚠️ Aviso: JSON recebido está vazio ([]). Pulando o período '{valor_periodo}'.")
+        return
+
     for tentativa in tqdm(range(max_tentativas), desc="⏳ Carregando JSON"):
         try:
             if not isinstance(json_ou_df, pd.DataFrame):
@@ -158,7 +163,10 @@ def carregar_dados_bigquery(json_ou_df, table_id, mapeamento_bq, valor_periodo=N
             break
 
     if df is not None:
-        # Encontra as colunas com data e ajusta
+        if df.empty:
+            print(f"⚠️ Aviso: O DataFrame resultante está vazio (0 registros). Pulando o envio para '{table_id}'.")
+            return
+
         padrao_timestamp = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$")
         colunas_transformadas = []
         for coluna in df.columns:
