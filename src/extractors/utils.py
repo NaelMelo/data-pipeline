@@ -61,6 +61,59 @@ def gerar_periodos_formatados():
     return periodos
 
 
+def gerar_periodos_formatados_FULL(data_inicio_str: str):
+    """
+    Gera uma lista de períodos mensais, começando em 'data_inicio_str' (formato 'YYYY-MM')
+    e terminando no mês seguinte ao mês atual.
+    """
+
+    # 1. Definir a data limite (mês seguinte ao atual)
+    hoje = now_fortaleza().date()
+    # Adiciona 1 mês à data de hoje
+    proximo_mes = hoje + relativedelta(months=1)
+    # Pega o primeiro dia do próximo mês (ex: 2025-12-01)
+    # Este será o último período a ser incluído no loop
+    data_limite = proximo_mes.replace(day=1)
+
+    # 2. Definir a data de partida
+    try:
+        # Converte a string 'YYYY-MM' para um objeto date no dia 1
+        data_corrente = datetime.strptime(data_inicio_str, "%Y-%m").date().replace(day=1)
+    except ValueError:
+        print(f"Erro: Formato de data_inicio_str inválido. Use 'YYYY-MM'.")
+        return []
+
+    # 3. Loop
+    periodos = []
+
+    # O loop continua ENQUANTO a data corrente for menor ou igual
+    # ao primeiro dia do próximo mês
+    while data_corrente <= data_limite:
+
+        # O início do período é a própria data corrente
+        inicio_mes_obj = data_corrente
+
+        # O fim do período é o (início + 1 mês) - 1 dia
+        fim_mes_obj = (inicio_mes_obj + relativedelta(months=1)) - timedelta(days=1)
+
+        # O nome e o filename agora serão o próprio 'YYYY-MM'
+        nome_periodo = inicio_mes_obj.strftime("%Y-%m")
+
+        periodos.append(
+            {
+                "nome": nome_periodo,
+                "inicio": inicio_mes_obj.strftime("%Y-%m-%d"),
+                "fim": fim_mes_obj.strftime("%Y-%m-%d"),
+                "filename": nome_periodo,
+            }
+        )
+
+        # Avança para o primeiro dia do próximo mês
+        data_corrente = data_corrente + relativedelta(months=1)
+
+    return periodos
+
+
 if __name__ == "__main__":
     print(now_fortaleza())
 

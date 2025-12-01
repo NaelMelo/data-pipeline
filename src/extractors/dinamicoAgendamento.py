@@ -2,7 +2,7 @@ import time
 import json
 import os
 from .captureSession import capture_session
-from .utils import medir_tempo, gerar_periodos_formatados
+from .utils import gerar_periodos_formatados_FULL, medir_tempo, gerar_periodos_formatados
 from .pipeline_bigquery import carregar_dados_bigquery
 
 # from downloadCsv import download_csv
@@ -16,6 +16,7 @@ def dinamicoAgendamento():
     print("🏁🏁🏁\n🏁 Iniciando extração do relatorio: Dinâmico Agendamentos - Regulação\n◽")
 
     lista_de_periodos = gerar_periodos_formatados()
+    # lista_de_periodos = gerar_periodos_formatados_FULL("2022-08")
 
     for periodo in lista_de_periodos:
         inicio = time.time()

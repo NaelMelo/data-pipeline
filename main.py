@@ -8,10 +8,10 @@ from src.extractors.dinamicoAgendamentosIntegrado import agendamentos_integrado
 from src.extractors.dinamicoAgendamento import dinamicoAgendamento
 
 if __name__ == "__main__":
-    agendamentos_integrado()
-    dinamicoVisaoGeralCP()
-    dinamicoVisaoGeralAI()
+    # agendamentos_integrado()
+    # dinamicoVisaoGeralCP()
+    # dinamicoVisaoGeralAI()
     dinamicoAgendamento()
-    dinamicoFilaEspera()
+    # dinamicoFilaEspera()
 
     print(now_fortaleza("%H:%M:%S"))
