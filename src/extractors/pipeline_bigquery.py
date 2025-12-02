@@ -9,6 +9,8 @@ import re
 from google.cloud import bigquery
 from google.api_core.exceptions import NotFound, BadRequest
 from unidecode import unidecode
+from io import StringIO
+import requests
 
 from .utils import now_fortaleza
 
@@ -140,7 +142,9 @@ def carregar_dados_bigquery(json_ou_df, table_id, mapeamento_bq, valor_periodo=N
     for tentativa in tqdm(range(max_tentativas), desc="⏳ Carregando JSON"):
         try:
             if not isinstance(json_ou_df, pd.DataFrame):
-                df = pd.read_json(json_ou_df)
+                response = requests.get(json_ou_df, timeout=(1200, 1200))
+                response.raise_for_status()
+                df = pd.read_json(StringIO(response.text))
                 tqdm.write(f"🎯 JSON carregado em {(tentativa * intervalo_segundos)//60} minutos!")
                 break
             else:
