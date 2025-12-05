@@ -22,7 +22,7 @@ def capture_session(payload):
     except requests.exceptions.RequestException as e:
         print("\nErro na Requisição:", str(e))
 
-    response = session.post(url_api, json=payload)
+    response = session.post(url_api, json=payload, timeout=300)
 
     if response.status_code == 200 and "application/json" in response.headers.get("Content-Type", ""):
         data = response.json()
