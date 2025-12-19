@@ -115,6 +115,27 @@ def gerar_schema_bigquery(df: pd.DataFrame, mapeamento_bq_limpo: dict):
     return schema
 
 
+def filtrar_colunas_existentes_bq(df: pd.DataFrame, table_id: str, client: bigquery.Client) -> pd.DataFrame:
+    """
+    Remove do DataFrame todas as colunas que não existem na tabela do BigQuery.
+    """
+    try:
+        table = client.get_table(table_id)
+        colunas_bq = {field.name for field in table.schema}
+
+        colunas_df = set(df.columns)
+        colunas_ignoradas = colunas_df - colunas_bq
+
+        if colunas_ignoradas:
+            print(f"⚠️ Colunas ignoradas (não existem no BigQuery): {sorted(colunas_ignoradas)}")
+
+        return df[[c for c in df.columns if c in colunas_bq]]
+
+    except NotFound:
+        print("⚠️ Tabela ainda não existe. Nenhuma coluna será filtrada.")
+        return df
+
+
 # =========================================================================
 # FUNÇÃO PRINCIPAL DE ORQUESTRAÇÃO E ENVIO
 # =========================================================================
@@ -179,6 +200,10 @@ def carregar_dados_bigquery(json_ou_df, table_id, mapeamento_bq, valor_periodo=N
         # --- ETAPA 1: Limpeza dos Cabeçalhos ---
         print("✨ Iniciando limpeza dos cabeçalhos...")
         df_limpo = clean_headers_custom_rules(df)
+
+        client = bigquery.Client()
+        df_limpo = filtrar_colunas_existentes_bq(df_limpo, table_id, client)
+
         print("✅ Cabeçalhos limpos e padronizados.")
 
         # --- ETAPA 2: Ajuste do Mapeamento ---
